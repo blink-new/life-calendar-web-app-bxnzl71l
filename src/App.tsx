@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
 import DatePicker from 'react-datepicker'
-import { differenceInWeeks, addWeeks, format } from 'date-fns'
+import { differenceInWeeks, addWeeks, format, isValid } from 'date-fns'
 import { Dialog } from '@headlessui/react'
 import '@fontsource/inter'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -27,6 +27,8 @@ function App() {
   const [isAddingMilestone, setIsAddingMilestone] = useState(false)
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null)
   const [newMilestoneDesc, setNewMilestoneDesc] = useState('')
+  const [isAddingByDate, setIsAddingByDate] = useState(false)
+  const [milestoneDate, setMilestoneDate] = useState<Date | null>(null)
   
   const calculateWeeks = () => {
     if (!birthDate) return []
@@ -47,15 +49,28 @@ function App() {
     if (!birthDate) return
     setSelectedWeek(week)
     setIsAddingMilestone(true)
+    setIsAddingByDate(false)
   }
 
   const addMilestone = () => {
-    if (selectedWeek === null || !newMilestoneDesc) return
+    if (!newMilestoneDesc) return
     
-    setMilestones(prev => [...prev, { week: selectedWeek, description: newMilestoneDesc }])
+    let weekNumber: number | null = null
+    
+    if (isAddingByDate && milestoneDate && birthDate && isValid(milestoneDate)) {
+      weekNumber = differenceInWeeks(milestoneDate, birthDate)
+    } else if (selectedWeek !== null) {
+      weekNumber = selectedWeek
+    }
+    
+    if (weekNumber === null) return
+    
+    setMilestones(prev => [...prev, { week: weekNumber!, description: newMilestoneDesc }])
     setNewMilestoneDesc('')
     setIsAddingMilestone(false)
     setSelectedWeek(null)
+    setMilestoneDate(null)
+    setIsAddingByDate(false)
   }
 
   const weeks = calculateWeeks()
@@ -97,6 +112,19 @@ function App() {
                 className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
             </div>
+
+            {birthDate && (
+              <button
+                onClick={() => {
+                  setIsAddingMilestone(true)
+                  setIsAddingByDate(true)
+                  setSelectedWeek(null)
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors mt-6"
+              >
+                Add Milestone by Date
+              </button>
+            )}
           </div>
         </div>
 
@@ -159,7 +187,12 @@ function App() {
 
         <Dialog
           open={isAddingMilestone}
-          onClose={() => setIsAddingMilestone(false)}
+          onClose={() => {
+            setIsAddingMilestone(false)
+            setIsAddingByDate(false)
+            setMilestoneDate(null)
+            setNewMilestoneDesc('')
+          }}
           className="relative z-50"
         >
           <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -171,6 +204,21 @@ function App() {
               </Dialog.Title>
               
               <div className="space-y-4">
+                {isAddingByDate && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Milestone Date
+                    </label>
+                    <DatePicker
+                      selected={milestoneDate}
+                      onChange={(date) => setMilestoneDate(date)}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="Select milestone date"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      showYearDropdown
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description
@@ -186,14 +234,21 @@ function App() {
                 
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => setIsAddingMilestone(false)}
+                    onClick={() => {
+                      setIsAddingMilestone(false)
+                      setIsAddingByDate(false)
+                      setMilestoneDate(null)
+                      setNewMilestoneDesc('')
+                    }}
                     className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={addMilestone}
-                    disabled={!newMilestoneDesc}
+                    disabled={(!isAddingByDate && selectedWeek === null) || 
+                            (isAddingByDate && !milestoneDate) || 
+                            !newMilestoneDesc}
                     className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md disabled:opacity-50"
                   >
                     Add Milestone
