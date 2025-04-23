@@ -63,7 +63,8 @@
     "zod": "^3.24.2",
     "@fontsource/inter": "latest",
     "react-datepicker": "latest",
-    "@types/react-datepicker": "latest"
+    "@types/react-datepicker": "latest",
+    "@headlessui/react": "latest"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

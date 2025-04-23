@@ -2,13 +2,31 @@
 import { useState } from 'react'
 import DatePicker from 'react-datepicker'
 import { differenceInWeeks, addWeeks, format } from 'date-fns'
+import { Dialog } from '@headlessui/react'
 import '@fontsource/inter'
 import 'react-datepicker/dist/react-datepicker.css'
 import './App.css'
 
+interface Milestone {
+  week: number
+  description: string
+}
+
+const DEFAULT_MILESTONES: Milestone[] = [
+  { week: 52 * 18, description: "18 years - Legal adult" },
+  { week: 52 * 21, description: "21 years - Full adult rights" },
+  { week: 52 * 30, description: "30 years - Career milestone" },
+  { week: 52 * 40, description: "40 years - Mid-life reflection" },
+  { week: 52 * 65, description: "65 years - Traditional retirement" },
+]
+
 function App() {
   const [birthDate, setBirthDate] = useState<Date | null>(null)
   const [lifespan, setLifespan] = useState(90)
+  const [milestones, setMilestones] = useState<Milestone[]>(DEFAULT_MILESTONES)
+  const [isAddingMilestone, setIsAddingMilestone] = useState(false)
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null)
+  const [newMilestoneDesc, setNewMilestoneDesc] = useState('')
   
   const calculateWeeks = () => {
     if (!birthDate) return []
@@ -21,14 +39,23 @@ function App() {
       week: i,
       lived: i < weeksLived,
       isCurrent: i === weeksLived,
-      isMilestone: [
-        52 * 18, // 18 years
-        52 * 21, // 21 years
-        52 * 30, // 30 years
-        52 * 40, // 40 years
-        52 * 65, // 65 years
-      ].includes(i),
+      milestone: milestones.find(m => m.week === i),
     }))
+  }
+
+  const handleWeekClick = (week: number) => {
+    if (!birthDate) return
+    setSelectedWeek(week)
+    setIsAddingMilestone(true)
+  }
+
+  const addMilestone = () => {
+    if (selectedWeek === null || !newMilestoneDesc) return
+    
+    setMilestones(prev => [...prev, { week: selectedWeek, description: newMilestoneDesc }])
+    setNewMilestoneDesc('')
+    setIsAddingMilestone(false)
+    setSelectedWeek(null)
   }
 
   const weeks = calculateWeeks()
@@ -75,27 +102,84 @@ function App() {
 
         {birthDate && (
           <div className="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
+            <p className="text-sm text-gray-600 mb-4">
+              Click any week to add a custom milestone. Hover over colored squares to see milestone details.
+            </p>
             <div className="grid grid-cols-52 gap-1 min-w-[1040px]">
               {Array.from({ length: lifespan }).map((_, year) => (
                 <div key={year} className="contents">
                   {weeks.slice(year * 52, (year + 1) * 52).map((week) => (
                     <div
                       key={week.week}
+                      onClick={() => handleWeekClick(week.week)}
                       className={`
-                        w-4 h-4 rounded-sm transition-all duration-300
+                        w-4 h-4 rounded-sm transition-all duration-300 cursor-pointer
                         ${week.lived ? 'bg-purple-600' : 'bg-gray-200'}
                         ${week.isCurrent ? 'ring-2 ring-teal-400' : ''}
-                        ${week.isMilestone ? 'bg-teal-400' : ''}
-                        hover:scale-150 hover:z-10
+                        ${week.milestone ? 'bg-teal-400' : ''}
+                        hover:scale-150 hover:z-10 group relative
                       `}
                       title={`Week ${week.week + 1}: ${format(addWeeks(birthDate, week.week), 'MMM d, yyyy')}`}
-                    />
+                    >
+                      {week.milestone && (
+                        <div className="absolute hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 -translate-y-full -translate-x-1/2 left-1/2 top-0 whitespace-nowrap z-20">
+                          {week.milestone.description}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        <Dialog
+          open={isAddingMilestone}
+          onClose={() => setIsAddingMilestone(false)}
+          className="relative z-50"
+        >
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="bg-white rounded-xl p-6 max-w-sm w-full">
+              <Dialog.Title className="text-lg font-medium mb-4">
+                Add Milestone
+              </Dialog.Title>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    value={newMilestoneDesc}
+                    onChange={(e) => setNewMilestoneDesc(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Enter milestone description"
+                  />
+                </div>
+                
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsAddingMilestone(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={addMilestone}
+                    disabled={!newMilestoneDesc}
+                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md disabled:opacity-50"
+                  >
+                    Add Milestone
+                  </button>
+                </div>
+              </div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
       </div>
     </div>
   )
