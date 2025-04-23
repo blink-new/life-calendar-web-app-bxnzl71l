@@ -108,19 +108,18 @@ function App() {
             <div className="flex">
               {/* Year markers */}
               <div className="flex flex-col pr-4 sticky left-0 z-10 bg-white">
-                {Array.from({ length: Math.ceil(lifespan / 5) }).map((_, i) => (
+                {Array.from({ length: lifespan }).map((_, year) => (
                   <div 
-                    key={i} 
-                    className="h-[1.25rem] flex items-center justify-end"
+                    key={year} 
+                    className="flex items-center justify-end"
                     style={{ 
-                      marginBottom: '0.25rem',
-                      height: i === 0 ? '0.5rem' : '1.25rem',
-                      marginTop: i === 0 ? '0.75rem' : '0'
+                      height: '20px',
+                      marginBottom: '4px'
                     }}
                   >
-                    {i > 0 && (
+                    {year % 5 === 0 && (
                       <span className="text-sm font-medium text-gray-600 pr-2">
-                        {i * 5}y
+                        {year}y
                       </span>
                     )}
                   </div>
@@ -136,7 +135,7 @@ function App() {
                         key={week.week}
                         onClick={() => handleWeekClick(week.week)}
                         className={`
-                          w-4 h-4 rounded-sm transition-all duration-300 cursor-pointer
+                          w-4 h-4 rounded-sm transition-all duration-300 cursor-pointer mb-1
                           ${week.lived ? 'bg-purple-600' : 'bg-gray-200'}
                           ${week.isCurrent ? 'ring-2 ring-teal-400' : ''}
                           ${week.milestone ? 'bg-teal-400' : ''}
