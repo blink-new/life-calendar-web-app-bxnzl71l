@@ -105,31 +105,55 @@ function App() {
             <p className="text-sm text-gray-600 mb-4">
               Click any week to add a custom milestone. Hover over colored squares to see milestone details.
             </p>
-            <div className="grid grid-cols-52 gap-1 min-w-[1040px]">
-              {Array.from({ length: lifespan }).map((_, year) => (
-                <div key={year} className="contents">
-                  {weeks.slice(year * 52, (year + 1) * 52).map((week) => (
-                    <div
-                      key={week.week}
-                      onClick={() => handleWeekClick(week.week)}
-                      className={`
-                        w-4 h-4 rounded-sm transition-all duration-300 cursor-pointer
-                        ${week.lived ? 'bg-purple-600' : 'bg-gray-200'}
-                        ${week.isCurrent ? 'ring-2 ring-teal-400' : ''}
-                        ${week.milestone ? 'bg-teal-400' : ''}
-                        hover:scale-150 hover:z-10 group relative
-                      `}
-                      title={`Week ${week.week + 1}: ${format(addWeeks(birthDate, week.week), 'MMM d, yyyy')}`}
-                    >
-                      {week.milestone && (
-                        <div className="absolute hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 -translate-y-full -translate-x-1/2 left-1/2 top-0 whitespace-nowrap z-20">
-                          {week.milestone.description}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ))}
+            <div className="flex">
+              {/* Year markers */}
+              <div className="flex flex-col pr-4 sticky left-0 z-10 bg-white">
+                {Array.from({ length: Math.ceil(lifespan / 5) }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="h-[1.25rem] flex items-center justify-end"
+                    style={{ 
+                      marginBottom: '0.25rem',
+                      height: i === 0 ? '0.5rem' : '1.25rem',
+                      marginTop: i === 0 ? '0.75rem' : '0'
+                    }}
+                  >
+                    {i > 0 && (
+                      <span className="text-sm font-medium text-gray-600 pr-2">
+                        {i * 5}y
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Grid */}
+              <div className="grid grid-cols-52 gap-1 min-w-[1040px]">
+                {Array.from({ length: lifespan }).map((_, year) => (
+                  <div key={year} className="contents">
+                    {weeks.slice(year * 52, (year + 1) * 52).map((week) => (
+                      <div
+                        key={week.week}
+                        onClick={() => handleWeekClick(week.week)}
+                        className={`
+                          w-4 h-4 rounded-sm transition-all duration-300 cursor-pointer
+                          ${week.lived ? 'bg-purple-600' : 'bg-gray-200'}
+                          ${week.isCurrent ? 'ring-2 ring-teal-400' : ''}
+                          ${week.milestone ? 'bg-teal-400' : ''}
+                          hover:scale-150 hover:z-10 group relative
+                        `}
+                        title={`Week ${week.week + 1}: ${format(addWeeks(birthDate, week.week), 'MMM d, yyyy')}`}
+                      >
+                        {week.milestone && (
+                          <div className="absolute hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 -translate-y-full -translate-x-1/2 left-1/2 top-0 whitespace-nowrap z-20">
+                            {week.milestone.description}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
